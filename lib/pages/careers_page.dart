@@ -30,21 +30,33 @@ class CareersPage extends StatelessWidget {
               title: "Network Technician Intern",
               description:
                   "Responsible for fiber installation, WiFi hotspot setup, and network configurations.",
-              onApply: () => Navigator.pushNamed(context, "/apply"),
+              onApply: () => Navigator.pushNamed(
+                context,
+                "/apply",
+                arguments: "Network Technician Intern",
+              ),
             ),
 
             JobCard(
               title: "Sales & Marketing Intern",
               description:
                   "Help connect customers in Bungoma to high-speed fiber and hotspot services.",
-              onApply: () => Navigator.pushNamed(context, "/apply"),
+              onApply: () => Navigator.pushNamed(
+                context,
+                "/apply",
+                arguments: "Sales & Marketing Intern",
+              ),
             ),
 
             JobCard(
               title: "Customer Experience Intern",
               description:
                   "Offer customer assistance, ticketing and service coordination.",
-              onApply: () => Navigator.pushNamed(context, "/apply"),
+              onApply: () => Navigator.pushNamed(
+                context,
+                "/apply",
+                arguments: "Customer Experience Intern",
+              ),
             ),
 
             const SizedBox(height: 60),

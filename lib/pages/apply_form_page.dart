@@ -3,6 +3,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import '../widgets/navbar.dart';
 import '../widgets/footer.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class ApplyFormPage extends StatefulWidget {
   const ApplyFormPage({super.key});
@@ -20,6 +22,13 @@ class _ApplyFormPageState extends State<ApplyFormPage> {
   String? description;
   Uint8List? cvFile;
   String? cvName;
+  String? position;
+
+  @override
+  void didChangeDependencies() {
+    position = ModalRoute.of(context)!.settings.arguments as String?;
+    super.didChangeDependencies();
+  }
 
   Future<void> pickCV() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -35,16 +44,41 @@ class _ApplyFormPageState extends State<ApplyFormPage> {
     }
   }
 
-  void submitApplication() {
+  void submitApplication() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
-    // Submit to backend via API
-    // TODO: Implement POST request to your server
+    if (cvFile == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please upload your CV")));
+      return;
+    }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Application submitted!")));
+    final url = Uri.parse("https://bazutel.com/api/apply.php");
+
+    final response = await http.post(
+      url,
+      body: {
+        "fullName": fullName,
+        "phone": phone,
+        "email": email,
+        "description": description,
+        "position": position,
+        "cvName": cvName,
+        "cvBytes": base64Encode(cvFile!), // send CV as base64
+      },
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Application submitted!")));
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Submission failed")));
+    }
   }
 
   @override

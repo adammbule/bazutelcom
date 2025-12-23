@@ -44,7 +44,7 @@ transporter.verify((err, success) => {
 });
 
 
-// Verify SMTP connection
+// Verify SMTP connection-- this is working test
 transporter.verify((err) => {
   if (err) {
     console.error('SMTP VERIFY ERROR:', err);

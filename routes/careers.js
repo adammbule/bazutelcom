@@ -52,7 +52,7 @@ transporter.verify((err, success) => {
   if (err) {
     console.error('SMTP VERIFY ERROR:', err);
   } else {
-    console.log('SMTP READY – TrueHost accepted connection');
+    console.log('SMTP READY – Host accepted connection');
   }
 });
 

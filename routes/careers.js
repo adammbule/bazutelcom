@@ -1,5 +1,6 @@
 import express from 'express';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
@@ -13,6 +14,18 @@ dotenv.config({ path: './keys.env' });
 
 const router = express.Router();
 const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB
+
+// --- Rate limiter: max 5 requests per IP per 24 hours ---
+const applyLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 5, // limit each IP to 5 requests per windowMs
+  message: { error: 'Too many applications from this IP, please try again after 24 hours' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  handler: (req, res) => {
+    res.status(429).json({ error: 'Too many applications; please try again after 24 hours' });
+  }
+});
 
 // --- Nodemailer transporter ---
 // Use port 465 for SSL or 587 for STARTTLS depending on your cPanel
@@ -54,7 +67,8 @@ transporter.verify((err) => {
 });
 
 // --- Apply Route ---
-router.post('/apply', upload.single('cv'), async (req, res) => {
+// Apply rate limiter BEFORE handling the file upload to avoid unnecessary uploads from blocked clients
+router.post('/apply', applyLimiter, upload.single('cv'), async (req, res) => {
   try {
     const { fullName, phone, email, description, position } = req.body;
 

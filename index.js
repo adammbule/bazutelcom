@@ -10,6 +10,6 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/careers', careersRoute);
 
-app.listen(3000, () => {
+app.listen(4000, () => {
   console.log('BazuNode running on port 3000');
 });

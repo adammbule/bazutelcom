@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 import '../widgets/navbar.dart';
 import '../widgets/footer.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 class ApplyFormPage extends StatefulWidget {
   const ApplyFormPage({super.key});
@@ -20,67 +20,108 @@ class _ApplyFormPageState extends State<ApplyFormPage> {
   String? phone;
   String? email;
   String? description;
-  Uint8List? cvFile;
-  String? cvName;
   String? position;
+
+  Uint8List? cvBytes;
+  String? cvName;
+
+  bool isSubmitting = false;
 
   @override
   void didChangeDependencies() {
-    position = ModalRoute.of(context)!.settings.arguments as String?;
     super.didChangeDependencies();
+    position = ModalRoute.of(context)?.settings.arguments as String?;
   }
 
+  // =========================
+  // PICK CV (WEB SAFE)
+  // =========================
   Future<void> pickCV() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ["pdf", "doc", "docx"],
+      allowedExtensions: ['pdf', 'doc', 'docx'],
+      withData: true, // REQUIRED for Flutter Web
     );
 
-    if (result != null) {
+    if (result != null && result.files.first.bytes != null) {
       setState(() {
-        cvFile = result.files.first.bytes;
+        cvBytes = result.files.first.bytes!;
         cvName = result.files.first.name;
       });
     }
   }
 
-  void submitApplication() async {
+  // =========================
+  // SUBMIT APPLICATION
+  // =========================
+  Future<void> submitApplication() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
 
-    if (cvFile == null) {
+    if (cvBytes == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Please upload your CV")));
+      ).showSnackBar(const SnackBar(content: Text('Please upload your CV')));
       return;
     }
 
-    final url = Uri.parse("https://bazutel.com/api/apply.php");
+    setState(() => isSubmitting = true);
 
-    final response = await http.post(
-      url,
-      body: {
-        "fullName": fullName,
-        "phone": phone,
-        "email": email,
-        "description": description,
-        "position": position,
-        "cvName": cvName,
-        "cvBytes": base64Encode(cvFile!), // send CV as base64
-      },
-    );
+    try {
+      final uri = Uri.parse(
+        'https://bazutelcom-backend.onrender.com/api/careers/apply', // 🔴 CHANGE IF NEEDED
+      );
 
-    if (response.statusCode == 200) {
+      final request = http.MultipartRequest('POST', uri);
+
+      request.fields['fullName'] = fullName ?? '';
+      request.fields['phone'] = phone ?? '';
+      request.fields['email'] = email ?? '';
+      request.fields['description'] = description ?? '';
+      request.fields['position'] = position ?? '';
+
+      request.files.add(
+        http.MultipartFile.fromBytes(
+          'cv',
+          cvBytes!,
+          filename: cvName ?? 'cv.pdf',
+        ),
+      );
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Application sent successfully ✅')),
+        );
+
+        _formKey.currentState!.reset();
+        setState(() {
+          cvBytes = null;
+          cvName = null;
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Submission failed (${response.statusCode}): $responseBody',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Application submitted!")));
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Submission failed")));
+      ).showSnackBar(SnackBar(content: Text('Submission error: $e')));
+    } finally {
+      setState(() => isSubmitting = false);
     }
   }
 
+  // =========================
+  // UI
+  // =========================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -88,78 +129,98 @@ class _ApplyFormPageState extends State<ApplyFormPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
+
             Text(
-              "Job Application Form",
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              'Apply for ${position ?? "Position"}',
+              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 30),
 
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Full Name
+                    // FULL NAME
                     TextFormField(
-                      decoration: const InputDecoration(labelText: "Full Name"),
-                      validator: (v) => v!.isEmpty ? "Required" : null,
-                      onSaved: (v) => fullName = v!,
+                      decoration: const InputDecoration(labelText: 'Full Name'),
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
+                      onSaved: (v) => fullName = v,
                     ),
                     const SizedBox(height: 20),
 
-                    // Phone
+                    // PHONE
                     TextFormField(
                       decoration: const InputDecoration(
-                        labelText: "Phone Number",
-                      ),
-                      validator: (v) => v!.isEmpty ? "Required" : null,
-                      onSaved: (v) => phone = v!,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Email
-                    TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: "Email Address",
+                        labelText: 'Phone Number',
                       ),
                       validator: (v) =>
-                          v!.contains("@") ? null : "Enter a valid email",
-                      onSaved: (v) => email = v!,
+                          v == null || v.isEmpty ? 'Required' : null,
+                      onSaved: (v) => phone = v,
                     ),
                     const SizedBox(height: 20),
 
-                    // Description
+                    // EMAIL
+                    TextFormField(
+                      decoration: const InputDecoration(
+                        labelText: 'Email Address',
+                      ),
+                      validator: (v) => v != null && v.contains('@')
+                          ? null
+                          : 'Enter a valid email',
+                      onSaved: (v) => email = v,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // DESCRIPTION
                     TextFormField(
                       maxLines: 5,
                       decoration: const InputDecoration(
-                        labelText: "Tell us about yourself",
+                        labelText: 'Tell us about yourself',
                       ),
-                      validator: (v) => v!.isEmpty ? "Required" : null,
-                      onSaved: (v) => description = v!,
+                      validator: (v) =>
+                          v == null || v.isEmpty ? 'Required' : null,
+                      onSaved: (v) => description = v,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 25),
 
-                    // Upload CV
+                    // UPLOAD CV
                     ElevatedButton.icon(
-                      onPressed: pickCV,
+                      onPressed: isSubmitting ? null : pickCV,
                       icon: const Icon(Icons.upload_file),
-                      label: Text(cvName ?? "Upload CV"),
+                      label: Text(cvName ?? 'Upload CV'),
                     ),
+
                     const SizedBox(height: 40),
 
+                    // SUBMIT BUTTON
                     ElevatedButton(
-                      onPressed: submitApplication,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(
+                      onPressed: isSubmitting ? null : submitApplication,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 30,
                           vertical: 15,
                         ),
-                        child: Text("Submit Application"),
+                        child: isSubmitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Text('Submit Application'),
                       ),
                     ),
-                    const SizedBox(height: 50),
+
+                    const SizedBox(height: 60),
                   ],
                 ),
               ),

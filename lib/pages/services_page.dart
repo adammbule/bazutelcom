@@ -3,6 +3,7 @@ import '../widgets/navbar.dart';
 import '../widgets/footer.dart';
 import '../widgets/service_card.dart';
 import '../widgets/section_title.dart';
+import '../widgets/hotspot_map.dart';
 
 class ServicesPage extends StatelessWidget {
   const ServicesPage({super.key});
@@ -14,8 +15,10 @@ class ServicesPage extends StatelessWidget {
         child: Column(
           children: [
             const NavBar(),
+
             const SectionTitle("Our Services"),
             const SizedBox(height: 20),
+
             Wrap(
               spacing: 20,
               runSpacing: 20,
@@ -37,6 +40,17 @@ class ServicesPage extends StatelessWidget {
                 ),
               ],
             ),
+
+            const SizedBox(height: 40),
+
+            const SectionTitle("Hotspot Locations"),
+            const SizedBox(height: 10),
+
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: HotspotMap(),
+            ),
+
             const SizedBox(height: 30),
             const Footer(),
           ],

@@ -250,16 +250,16 @@ class _RotatingHeroState extends State<_RotatingHero> {
   @override
   Widget build(BuildContext context) {
     return PageHero(
-      title: 'Reliable Internet for Town',
+      title: 'Reliable Internet for ',
       titleWidget: Text.rich(
         TextSpan(
           children: [
-            const TextSpan(text: 'Reliable Internet for '),
+            const TextSpan(text: 'Reliable Internet in '),
             TextSpan(
               text: '${kHeroTowns[_index]}',
               style: const TextStyle(color: Colors.red),
             ),
-            const TextSpan(text: ' Town'),
+            //const TextSpan(text: ' Town'),
           ],
         ),
       ),

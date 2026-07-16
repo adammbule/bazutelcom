@@ -1,9 +1,15 @@
 ---
 deployment:
   tasks:
-    # Replace this with your actual cPanel account document root.
-    # Example: /home/yourcpaneluser/public_html/ or /home/yourcpaneluser/public_html/yourdomain/
-    - export DEPLOYPATH=/home/yourcpaneluser/public_html/
-    # Build the Flutter web app locally before deploying:
-    # flutter build web --release
-    - if [ -d build/web ]; then /bin/cp -R build/web/. "$DEPLOYPATH"; else echo "Missing build/web output. Run flutter build web --release first."; exit 1; fi
+    - export DEPLOYPATH=/home/hpxbxowy/public_html/
+    - /build/web index.html $DEPLOYPATH
+    - /build/web main.dart.js $DEPLOYPATH
+    - /build/web assets $DEPLOYPATH/assets
+    - /build/web favicon.png $DEPLOYPATH
+    - /build/web manifest.json $DEPLOYPATH
+    - /build/web icons $DEPLOYPATH/icons
+    - /build/web version.json $DEPLOYPATH
+    - /build/web flutter_service_worker.js $DEPLOYPATH
+    - /build/web canvaskit $DEPLOYPATH/canvaskit
+    - /build/web flutter.js $DEPLOYPATH
+    - /build/web flutter_bootstrap.js $DEPLOYPATH

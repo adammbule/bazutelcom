@@ -2,14 +2,14 @@
 deployment:
   tasks:
     - export DEPLOYPATH=/home/hpxbxowy/public_html/
-    - /build/web index.html $DEPLOYPATH
-    - /build/web main.dart.js $DEPLOYPATH
-    - /build/web assets $DEPLOYPATH/assets
-    - /build/web favicon.png $DEPLOYPATH
-    - /build/web manifest.json $DEPLOYPATH
-    - /build/web icons $DEPLOYPATH/icons
-    - /build/web version.json $DEPLOYPATH
-    - /build/web flutter_service_worker.js $DEPLOYPATH
-    - /build/web canvaskit $DEPLOYPATH/canvaskit
-    - /build/web flutter.js $DEPLOYPATH
-    - /build/web flutter_bootstrap.js $DEPLOYPATH
+    - /bin/cp -R build/web/index.html $DEPLOYPATH
+    - /bin/cp -R build/web/main.dart.js $DEPLOYPATH
+    - /bin/cp -R build/web/assets $DEPLOYPATH
+    - /bin/cp -R build/web/favicon.png $DEPLOYPATH
+    - /bin/cp -R build/web/manifest.json $DEPLOYPATH
+    - /bin/cp -R build/web/icons $DEPLOYPATH
+    - /bin/cp -R build/web/version.json $DEPLOYPATH
+    - /bin/cp -R build/web/flutter_service_worker.js $DEPLOYPATH
+    - /bin/cp -R build/web/canvaskit $DEPLOYPATH
+    - /bin/cp -R build/web/flutter.js $DEPLOYPATH
+    - /bin/cp -R build/web/flutter_bootstrap.js $DEPLOYPATH
